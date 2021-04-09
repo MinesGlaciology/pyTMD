@@ -6,15 +6,16 @@ load_constituent.py
 #### Calling Sequence
 ```python
 from pyTMD.load_constituent import load_constituent
-flag,amplitude,phase,alpha,species = load_constituent(c)
+amplitude,phase,omega,alpha,species = load_constituent(c)
 ```
-[Source code](https://github.com/tsutterley/pyTMD/blob/master/pyTMD/load_constituent.py)
+[Source code](https://github.com/tsutterley/pyTMD/blob/main/pyTMD/load_constituent.py)
 
-#### Inputs
+#### Arguments
  1. `c`: tidal constituent IDs
 
-#### Outputs
- - `flag`: test for constituent being part of tidal program
- - `amplitude`, phase, frequency of tidal constituent
+#### Returns
+ - `amplitude`: amplitude of equilibrium tide in m for tidal constituent
+ - `phase`: phase of tidal constituent
+ - `omega`: angular frequency of constituent in radians
  - `alpha`: load love number of tidal constituent
- - `species`: spherical harmonic dependence of quadropole potential
+ - `species`: spherical harmonic dependence of quadrupole potential

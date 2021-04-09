@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-read_ocean_pole_tide.py (12/2018)
+read_ocean_pole_tide.py (03/2021)
 Reads ocean pole load tide coefficients provided by IERS
 http://maia.usno.navy.mil/conventions/2010/2010_official/chapter7/tn36_c7.pdf
 http://maia.usno.navy.mil/conventions/2010/2010_update/chapter7/icc7.pdf
@@ -8,6 +8,13 @@ http://maia.usno.navy.mil/conventions/2010/2010_update/chapter7/icc7.pdf
 IERS 0.5x0.5 map of ocean pole tide coefficients:
 ftp://maia.usno.navy.mil/conventions/2010/2010_update/chapter7/additional_info/
     opoleloadcoefcmcor.txt.gz
+
+OUTPUTS:
+    ur: radial ocean pole tide coefficients
+    un: north ocean pole tide coefficients
+    ue: east ocean pole tide coefficients
+    glon: ocean grid longitude
+    glat: ocean grid latitude
 
 PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
@@ -22,8 +29,10 @@ REFERENCES:
         doi: 10.1007/s00190-015-0848-7
 
 UPDATE HISTORY:
+    Updated 03/2021: replaced numpy bool/int to prevent deprecation warnings
+    Updated 08/2020: output north load and east load deformation components
+    Updated 07/2020: added function docstrings
     Updated 12/2018: Compatibility updates for Python3
-    Split 10/2017 from compute_OPT_triangulated_data.py into separate file
     Written 09/2017
 """
 import re
@@ -32,6 +41,21 @@ import numpy as np
 
 #-- PURPOSE: read real and imaginary ocean pole tide coefficients
 def read_ocean_pole_tide(input_file):
+    """
+    Read real and imaginary ocean pole tide coefficients
+
+    Arguments
+    ---------
+    input_file: IERS 0.5x0.5 map of ocean pole tide coefficients
+
+    Returns
+    -------
+    ur: radial ocean pole tide coefficients
+    un: north ocean pole tide coefficients
+    ue: east ocean pole tide coefficients
+    glon: ocean grid longitude
+    glat: ocean grid latitude
+    """
     #-- read GZIP ocean pole tide file
     with gzip.open(input_file,'rb') as f:
         file_contents = f.read().splitlines()
@@ -56,23 +80,42 @@ def read_ocean_pole_tide(input_file):
     nlat = len(glat)
     #-- allocate for output grid maps
     ur = np.zeros((nlon,nlat),dtype=np.complex128)
+    un = np.zeros((nlon,nlat),dtype=np.complex128)
+    ue = np.zeros((nlon,nlat),dtype=np.complex128)
     #-- read lines of file and add to output variables
     for i,line in enumerate(file_contents[count:]):
         ln,lt,urr,uri,unr,uni,uer,uei = np.array(line.split(), dtype='f8')
-        ilon = np.int(ln/dlon)
-        ilat = np.int((90.0-lt)/dlat)
+        ilon = int(ln/dlon)
+        ilat = int((90.0-lt)/dlat)
         ur[ilon,ilat] = urr + 1j*uri
+        un[ilon,ilat] = unr + 1j*uni
+        ue[ilon,ilat] = uer + 1j*uei
 
     #-- extend matrix for bilinear interpolation
     glon = extend_array(glon,dlon)
     ur = extend_matrix(ur)
+    un = extend_matrix(un)
+    ue = extend_matrix(ue)
     #-- return values
-    return (ur,glon,glat)
+    return (ur,un,ue,glon,glat)
 
 #-- PURPOSE: wrapper function to extend an array
 def extend_array(input_array,step_size):
+    """
+    Wrapper function to extend an array
+
+    Arguments
+    ---------
+    input_array: array to extend
+    step_size: step size between elements of array
+
+    Returns
+    -------
+    temp: extended array
+    """
     n = len(input_array)
     temp = np.zeros((n+2),dtype=input_array.dtype)
+    #-- extended array [x-1,x0,...,xN,xN+1]
     temp[0] = input_array[0] - step_size
     temp[1:-1] = input_array[:]
     temp[-1] = input_array[-1] + step_size
@@ -80,6 +123,17 @@ def extend_array(input_array,step_size):
 
 #-- PURPOSE: wrapper function to extend a matrix
 def extend_matrix(input_matrix):
+    """
+    Wrapper function to extend a matrix
+
+    Arguments
+    ---------
+    input_matrix: matrix to extend
+
+    Returns
+    -------
+    temp: extended matrix
+    """
     nx,ny = np.shape(input_matrix)
     temp = np.zeros((nx+2,ny),dtype=input_matrix.dtype)
     temp[0,:] = input_matrix[-1,:]

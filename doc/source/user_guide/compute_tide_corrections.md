@@ -4,6 +4,7 @@ compute_tide_corrections.py
  - Calculates tidal elevations for correcting elevation or imagery data
  - Can use OTIS format tidal solutions provided by Ohio State University and ESR
  - Can use Global Tide Model (GOT) solutions provided by Richard Ray at GSFC
+ - Can use Finite Element Solution (FES) models provided by AVISO
 
 #### Calling Sequence
 ```python
@@ -11,14 +12,14 @@ from pyTMD.compute_tide_corrections import compute_tide_corrections
 tide = compute_tide_corrections(x, y, delta_time, DIRECTORY=DIRECTORY,
     MODEL=MODEL, EPOCH=(2000,1,1,0,0,0), EPSG=3031, TYPE='drift')
 ```
-[Source code](https://github.com/tsutterley/pyTMD/blob/master/pyTMD/compute_tide_corrections.py)
+[Source code](https://github.com/tsutterley/pyTMD/blob/main/pyTMD/compute_tide_corrections.py)
 
-#### Inputs
+#### Arguments
  1. `x`: x-coordinates in projection EPSG
  2. `y`: y-coordinates in projection EPSG
  3. `delta_time`: seconds since EPOCH
 
-#### Options
+#### Keyword arguments
  - `DIRECTORY`: working data directory for tide models
  - `MODEL`: Tide model to use in correction
  - `EPOCH`: time period for calculating delta times
@@ -35,8 +36,9 @@ tide = compute_tide_corrections(x, y, delta_time, DIRECTORY=DIRECTORY,
  - `METHOD`: interpolation method
      * `bilinear`: quick bilinear interpolation
      * `spline`: scipy bivariate spline interpolation (default)
-     * `linear`, `cubic`, `nearest`: scipy griddata interpolations
+     * `linear`, `nearest`: scipy regular grid interpolations
+ - `EXTRAPOLATE`: Extrapolate with nearest-neighbors
  - `FILL_VALUE`: output invalid value
 
-#### Outputs
+#### Returns
  - `tide`: tide height correction reconstructed using the nodal corrections

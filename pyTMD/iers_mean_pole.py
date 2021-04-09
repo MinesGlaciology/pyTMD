@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 iers_mean_pole.py
-Written by Tyler Sutterley (12/2018)
+Written by Tyler Sutterley (02/2021)
 Provides the angular coordinates of the IERS Conventional Mean Pole (CMP)
 Coordinates are based on the table of values from
     ftp://hpiers.obspm.fr/iers/eop/eopc01/mean-pole.tab
@@ -34,6 +34,8 @@ REFERENCE:
         IERS Technical Note No. 36, BKG (2010)
 
 UPDATE HISTORY:
+    Updated 02/2021: replaced numpy bool to prevent deprecation warning
+    Updated 07/2020: added function docstrings
     Updated 12/2018: using future division for python3 compatibility
     Written 09/2017
 """
@@ -42,6 +44,27 @@ import numpy as np
 
 #-- read table of mean pole values, calculate angular coordinates at epoch
 def iers_mean_pole(input_file,input_epoch,version,FILL_VALUE=np.nan):
+    """
+    Calculates the angular coordinates of the IERS Conventional Mean Pole (CMP)
+
+    Arguments
+    ---------
+    input_file: full path to mean-pole.tab file provided by IERS
+    input_epoch: dates for the angular coordinates of the Conventional Mean Pole
+    version: Year of the conventional model.
+
+    Keyword arguments
+    -----------------
+    FILL_VALUE: value for invalid flags
+
+    Returns
+    -------
+    x: Angular coordinate x of conventional mean pole
+    y: Angular coordinate y of conventional mean pole
+    flag: epoch is valid for version and version number is valid
+    """
+    #-- verify IERS model version
+    assert version in ('2003','2010','2015'), "Incorrect IERS model version"
     #-- read mean pole file
     table = np.loadtxt(input_file)
     #-- reduce to 1971 to end date
@@ -56,7 +79,7 @@ def iers_mean_pole(input_file,input_epoch,version,FILL_VALUE=np.nan):
     #-- allocate for output arrays
     x = np.full_like(input_epoch,FILL_VALUE)
     y = np.full_like(input_epoch,FILL_VALUE)
-    flag = np.zeros_like(input_epoch,dtype=np.bool)
+    flag = np.zeros_like(input_epoch,dtype=bool)
     for t,epoch in enumerate(input_epoch):
         #-- Conventional mean pole model in IERS Conventions 2003
         if (version == '2003') and (epoch >= 1975) and (epoch < 2004):
